@@ -1,0 +1,370 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); color: var(--color-text-primary); }
+  .app { min-height: 100vh; background: #0a0a0f; color: #e8e8f0; padding: 0; }
+
+  .header { padding: 2rem 2rem 1rem; text-align: center; border-bottom: 0.5px solid rgba(255,255,255,0.07); }
+  .logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 0.5rem; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #7c3aed, #db2777); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .logo-text { font-size: 20px; font-weight: 500; letter-spacing: -0.5px; color: #f0f0fa; }
+  .tagline { font-size: 13px; color: #8888a8; }
+
+  .main { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 1.5rem 2rem; }
+
+  .panel { background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 1.25rem; }
+  .panel-title { font-size: 13px; font-weight: 500; color: #a8a8c8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+
+  .upload-zone { border: 1.5px dashed rgba(124,58,237,0.4); border-radius: 10px; padding: 1.5rem 1rem; text-align: center; cursor: pointer; transition: all 0.2s; min-height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; position: relative; }
+  .upload-zone:hover { border-color: rgba(124,58,237,0.8); background: rgba(124,58,237,0.05); }
+  .upload-zone.has-file { border-style: solid; border-color: rgba(124,58,237,0.6); background: rgba(124,58,237,0.08); }
+  .upload-icon { font-size: 28px; color: #7c3aed; }
+  .upload-label { font-size: 13px; color: #8888a8; }
+  .upload-accept { font-size: 11px; color: #5555a0; }
+  .file-preview { display: flex; align-items: center; gap: 10px; padding: 0.5rem 0.75rem; background: rgba(124,58,237,0.12); border-radius: 8px; margin-top: 8px; width: 100%; }
+  .file-preview-icon { font-size: 20px; color: #a78bfa; }
+  .file-preview-info { flex: 1; text-align: left; }
+  .file-preview-name { font-size: 12px; font-weight: 500; color: #c4b5fd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+  .file-preview-size { font-size: 11px; color: #7c6fcd; }
+  .remove-btn { font-size: 16px; color: #7c3aed; cursor: pointer; padding: 2px; }
+
+  .face-preview { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid #7c3aed; display: block; margin: 0 auto 8px; }
+
+  .prompt-box { width: 100%; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.12); border-radius: 8px; color: #e0e0f0; font-size: 13px; padding: 0.75rem; resize: none; font-family: var(--font-sans); min-height: 80px; outline: none; }
+  .prompt-box:focus { border-color: rgba(124,58,237,0.6); }
+  .prompt-box::placeholder { color: #5555a0; }
+
+  .prompt-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip { font-size: 11px; padding: 4px 10px; border-radius: 20px; background: rgba(124,58,237,0.1); border: 0.5px solid rgba(124,58,237,0.3); color: #a78bfa; cursor: pointer; transition: all 0.15s; }
+  .chip:hover { background: rgba(124,58,237,0.2); border-color: rgba(124,58,237,0.6); }
+
+  .sliders { display: flex; flex-direction: column; gap: 14px; }
+  .slider-row { display: flex; flex-direction: column; gap: 4px; }
+  .slider-label { display: flex; justify-content: space-between; font-size: 12px; color: #8888a8; }
+  .slider-val { color: #c4b5fd; font-weight: 500; }
+  input[type=range] { width: 100%; accent-color: #7c3aed; height: 4px; }
+
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .opt-btn { background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; font-size: 12px; color: #a8a8c8; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .opt-btn:hover { background: rgba(124,58,237,0.1); border-color: rgba(124,58,237,0.4); color: #c4b5fd; }
+  .opt-btn.active { background: rgba(124,58,237,0.2); border-color: rgba(124,58,237,0.6); color: #c4b5fd; }
+
+  .generate-btn { width: 100%; margin: 1.5rem 2rem 0; width: calc(100% - 4rem); background: linear-gradient(135deg, #7c3aed, #db2777); border: none; border-radius: 12px; padding: 1rem; color: white; font-size: 15px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: opacity 0.2s; }
+  .generate-btn:hover { opacity: 0.9; }
+  .generate-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .progress-section { padding: 0 2rem 1.5rem; display: none; }
+  .progress-section.show { display: block; }
+  .progress-bar-wrap { background: rgba(255,255,255,0.06); border-radius: 100px; height: 8px; overflow: hidden; margin: 8px 0; }
+  .progress-bar { height: 100%; border-radius: 100px; background: linear-gradient(90deg, #7c3aed, #db2777); width: 0%; transition: width 0.4s ease; }
+  .progress-step { font-size: 12px; color: #8888a8; display: flex; justify-content: space-between; }
+  .progress-pct { color: #a78bfa; font-weight: 500; }
+
+  .steps-row { display: flex; gap: 8px; margin-top: 10px; }
+  .step-pill { flex: 1; text-align: center; font-size: 10px; padding: 4px 2px; border-radius: 6px; background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.08); color: #5555a0; transition: all 0.3s; }
+  .step-pill.done { background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.4); color: #c4b5fd; }
+  .step-pill.active { background: rgba(219,39,119,0.15); border-color: rgba(219,39,119,0.5); color: #f9a8d4; }
+
+  .result-section { padding: 0 2rem 2rem; display: none; }
+  .result-section.show { display: block; }
+  .video-player { background: #000; border-radius: 12px; border: 0.5px solid rgba(255,255,255,0.1); overflow: hidden; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; position: relative; }
+  .play-icon { font-size: 60px; color: rgba(255,255,255,0.3); }
+  .video-overlay { position: absolute; inset: 0; background: rgba(124,58,237,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .result-label { font-size: 13px; color: #a78bfa; font-weight: 500; }
+  .result-actions { display: flex; gap: 10px; margin-top: 12px; }
+  .action-btn { flex: 1; padding: 0.6rem; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; border: 0.5px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: #e0e0f0; transition: all 0.15s; }
+  .action-btn:hover { background: rgba(255,255,255,0.1); }
+  .action-btn.primary { background: rgba(124,58,237,0.2); border-color: rgba(124,58,237,0.5); color: #c4b5fd; }
+  .action-btn.primary:hover { background: rgba(124,58,237,0.35); }
+
+  .col-full { grid-column: 1 / -1; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 0 2rem; }
+
+  input[type=file] { display: none; }
+</style>
+
+<div class="app">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+      <span class="logo-text">AI Music Video Generator</span>
+    </div>
+    <div class="tagline">Upload your photo + song · Get a cinematic AI music video</div>
+  </div>
+
+  <div class="two-col" style="margin-top:1.5rem;">
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-face-id" aria-hidden="true"></i> Face Photo</div>
+      <div class="upload-zone" id="photo-zone" onclick="document.getElementById('photo-input').click()">
+        <input type="file" id="photo-input" accept=".jpg,.jpeg,.png,.webp" onchange="handlePhoto(this)">
+        <div id="photo-placeholder">
+          <i class="ti ti-user-circle upload-icon"></i>
+          <div class="upload-label">Drop your photo here</div>
+          <div class="upload-accept">JPG · PNG · WEBP</div>
+        </div>
+        <div id="photo-preview" style="display:none; flex-direction:column; align-items:center;">
+          <img id="face-img" class="face-preview" src="" alt="face preview">
+          <div class="file-preview">
+            <i class="ti ti-photo file-preview-icon"></i>
+            <div class="file-preview-info">
+              <div class="file-preview-name" id="photo-name">photo.jpg</div>
+              <div class="file-preview-size" id="photo-size">0 KB</div>
+            </div>
+            <span class="remove-btn" onclick="removeFile('photo',event)"><i class="ti ti-x"></i></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-music" aria-hidden="true"></i> Music / Audio</div>
+      <div class="upload-zone" id="audio-zone" onclick="document.getElementById('audio-input').click()">
+        <input type="file" id="audio-input" accept=".mp3,.wav" onchange="handleAudio(this)">
+        <div id="audio-placeholder">
+          <i class="ti ti-music upload-icon"></i>
+          <div class="upload-label">Drop your song here</div>
+          <div class="upload-accept">MP3 · WAV</div>
+        </div>
+        <div id="audio-preview" style="display:none; flex-direction:column; align-items:center; width:100%;">
+          <div style="font-size:40px; color:#a78bfa; margin-bottom:6px;"><i class="ti ti-waveform"></i></div>
+          <div class="file-preview">
+            <i class="ti ti-headphones file-preview-icon"></i>
+            <div class="file-preview-info">
+              <div class="file-preview-name" id="audio-name">song.mp3</div>
+              <div class="file-preview-size" id="audio-size">0 KB</div>
+            </div>
+            <span class="remove-btn" onclick="removeFile('audio',event)"><i class="ti ti-x"></i></span>
+          </div>
+          <audio id="audio-player" controls style="width:100%; margin-top:8px; height:32px; border-radius:6px;"></audio>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-top:0;">
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-sparkles" aria-hidden="true"></i> Video Style Prompt</div>
+      <textarea class="prompt-box" id="style-prompt" placeholder="Describe the music video visual style...&#10;e.g. Cinematic neon city at night with bokeh lights"></textarea>
+      <div class="prompt-chips">
+        <span class="chip" onclick="setPrompt('Cinematic neon city at night')">🌃 Neon city</span>
+        <span class="chip" onclick="setPrompt('Afrobeats party vibe with vibrant colors')">🎉 Afrobeats</span>
+        <span class="chip" onclick="setPrompt('Romantic golden sunset beach')">🌅 Sunset beach</span>
+        <span class="chip" onclick="setPrompt('Dark emotional moody music video')">🌑 Dark mood</span>
+        <span class="chip" onclick="setPrompt('Luxury mansion slow motion cinematic')">✨ Luxury</span>
+        <span class="chip" onclick="setPrompt('Fantasy forest with magical particles')">🌲 Fantasy</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-adjustments" aria-hidden="true"></i> Generation Settings</div>
+      <div class="sliders">
+        <div class="slider-row">
+          <div class="slider-label"><span>Realism strength</span><span class="slider-val" id="realism-val">85%</span></div>
+          <input type="range" min="0" max="100" value="85" step="1" oninput="document.getElementById('realism-val').textContent=this.value+'%'">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label"><span>Lip sync accuracy</span><span class="slider-val" id="lipsync-val">90%</span></div>
+          <input type="range" min="0" max="100" value="90" step="1" oninput="document.getElementById('lipsync-val').textContent=this.value+'%'">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label"><span>Motion intensity</span><span class="slider-val" id="motion-val">60%</span></div>
+          <input type="range" min="0" max="100" value="60" step="1" oninput="document.getElementById('motion-val').textContent=this.value+'%'">
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <div class="slider-label" style="margin-bottom:6px;"><span>Export quality</span></div>
+        <div class="options-grid" id="quality-opts">
+          <div class="opt-btn" onclick="selectOpt('quality',this)">720p HD</div>
+          <div class="opt-btn active" onclick="selectOpt('quality',this)">1080p FHD</div>
+          <div class="opt-btn" onclick="selectOpt('quality',this)">4K UHD</div>
+          <div class="opt-btn" onclick="selectOpt('quality',this)">Auto</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-top:0;">
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-camera-selfie" aria-hidden="true"></i> Camera Motion</div>
+      <div class="options-grid" id="cam-opts">
+        <div class="opt-btn active" onclick="selectOpt('cam',this)">Cinematic pan</div>
+        <div class="opt-btn" onclick="selectOpt('cam',this)">Slow zoom in</div>
+        <div class="opt-btn" onclick="selectOpt('cam',this)">Handheld shake</div>
+        <div class="opt-btn" onclick="selectOpt('cam',this)">Static close-up</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-list" aria-hidden="true"></i> Extra Features</div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:#a8a8c8; cursor:pointer;">
+          <input type="checkbox" checked style="accent-color:#7c3aed;"> Auto subtitles (Whisper AI)
+        </label>
+        <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:#a8a8c8; cursor:pointer;">
+          <input type="checkbox" checked style="accent-color:#7c3aed;"> Face enhancement
+        </label>
+        <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:#a8a8c8; cursor:pointer;">
+          <input type="checkbox" style="accent-color:#7c3aed;"> Background music mixing
+        </label>
+        <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:#a8a8c8; cursor:pointer;">
+          <input type="checkbox" style="accent-color:#7c3aed;"> AI color grading
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <button class="generate-btn" id="gen-btn" onclick="startGeneration()" disabled>
+    <i class="ti ti-player-play"></i> Generate Music Video
+  </button>
+
+  <div class="progress-section" id="progress-section" style="margin-top:1.5rem;">
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-loader-2" aria-hidden="true"></i> <span id="step-label">Processing...</span></div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="prog-bar"></div></div>
+      <div class="progress-step"><span id="step-desc">Initializing AI pipeline</span><span class="progress-pct" id="prog-pct">0%</span></div>
+      <div class="steps-row">
+        <div class="step-pill" id="s1">Face detect</div>
+        <div class="step-pill" id="s2">Lip sync</div>
+        <div class="step-pill" id="s3">Animate</div>
+        <div class="step-pill" id="s4">Background</div>
+        <div class="step-pill" id="s5">Render</div>
+        <div class="step-pill" id="s6">Export</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-section" id="result-section" style="margin-top:1.5rem; padding-bottom: 2rem;">
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-movie" aria-hidden="true"></i> Your Music Video is Ready!</div>
+      <div class="video-player">
+        <div class="video-overlay">
+          <i class="ti ti-player-play" style="font-size:50px; color:rgba(196,181,253,0.6);"></i>
+          <div class="result-label">Preview your AI music video</div>
+          <div style="font-size:11px; color:#7c6fcd;">Connect backend to stream rendered output</div>
+        </div>
+      </div>
+      <div class="result-actions">
+        <button class="action-btn primary"><i class="ti ti-download"></i> Download HD</button>
+        <button class="action-btn"><i class="ti ti-refresh"></i> Regenerate</button>
+        <button class="action-btn" onclick="sendPrompt('How do I connect the AI backend for this music video generator?')"><i class="ti ti-settings"></i> Setup AI ↗</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let hasPhoto = false, hasAudio = false;
+
+  function checkReady() {
+    document.getElementById('gen-btn').disabled = !(hasPhoto && hasAudio);
+  }
+
+  function handlePhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      document.getElementById('face-img').src = e.target.result;
+      document.getElementById('photo-name').textContent = file.name;
+      document.getElementById('photo-size').textContent = (file.size / 1024).toFixed(0) + ' KB';
+      document.getElementById('photo-placeholder').style.display = 'none';
+      document.getElementById('photo-preview').style.display = 'flex';
+      document.getElementById('photo-zone').classList.add('has-file');
+      hasPhoto = true;
+      checkReady();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleAudio(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('audio-name').textContent = file.name;
+    document.getElementById('audio-size').textContent = (file.size / 1024).toFixed(0) + ' KB';
+    const url = URL.createObjectURL(file);
+    document.getElementById('audio-player').src = url;
+    document.getElementById('audio-placeholder').style.display = 'none';
+    document.getElementById('audio-preview').style.display = 'flex';
+    document.getElementById('audio-zone').classList.add('has-file');
+    hasAudio = true;
+    checkReady();
+  }
+
+  function removeFile(type, e) {
+    e.stopPropagation();
+    if (type === 'photo') {
+      document.getElementById('photo-placeholder').style.display = 'flex';
+      document.getElementById('photo-preview').style.display = 'none';
+      document.getElementById('photo-zone').classList.remove('has-file');
+      document.getElementById('photo-input').value = '';
+      hasPhoto = false;
+    } else {
+      document.getElementById('audio-placeholder').style.display = 'flex';
+      document.getElementById('audio-preview').style.display = 'none';
+      document.getElementById('audio-zone').classList.remove('has-file');
+      document.getElementById('audio-input').value = '';
+      hasAudio = false;
+    }
+    checkReady();
+  }
+
+  function setPrompt(txt) {
+    document.getElementById('style-prompt').value = txt;
+  }
+
+  function selectOpt(group, el) {
+    const map = { quality: 'quality-opts', cam: 'cam-opts' };
+    document.querySelectorAll('#' + map[group] + ' .opt-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  const steps = [
+    { id: 's1', label: 'Detecting face landmarks...', desc: 'SadTalker face analysis' },
+    { id: 's2', label: 'Generating lip sync...', desc: 'Wav2Lip audio alignment' },
+    { id: 's3', label: 'Animating facial motion...', desc: 'AnimateDiff motion generation' },
+    { id: 's4', label: 'Rendering background...', desc: 'Stable Diffusion scene synthesis' },
+    { id: 's5', label: 'Compositing video...', desc: 'FFmpeg render pipeline' },
+    { id: 's6', label: 'Exporting HD video...', desc: 'Final encoding & audio sync' }
+  ];
+
+  function startGeneration() {
+    document.getElementById('gen-btn').disabled = true;
+    document.getElementById('result-section').classList.remove('show');
+    document.getElementById('progress-section').classList.add('show');
+    document.getElementById('progress-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    let pct = 0;
+    let stepIdx = 0;
+    const stepsPerInterval = 100 / (steps.length * 12);
+
+    const interval = setInterval(() => {
+      pct = Math.min(100, pct + stepsPerInterval + Math.random() * 0.5);
+      const newStep = Math.floor((pct / 100) * steps.length);
+
+      if (newStep !== stepIdx && newStep < steps.length) {
+        if (stepIdx < steps.length) document.getElementById(steps[stepIdx].id).classList.remove('active');
+        if (stepIdx < steps.length) document.getElementById(steps[stepIdx].id).classList.add('done');
+        stepIdx = newStep;
+        document.getElementById(steps[Math.min(stepIdx, steps.length-1)].id).classList.add('active');
+        document.getElementById('step-label').textContent = steps[Math.min(stepIdx, steps.length-1)].label;
+        document.getElementById('step-desc').textContent = steps[Math.min(stepIdx, steps.length-1)].desc;
+      }
+
+      document.getElementById('prog-bar').style.width = Math.round(pct) + '%';
+      document.getElementById('prog-pct').textContent = Math.round(pct) + '%';
+
+      if (pct >= 100) {
+        clearInterval(interval);
+        steps.forEach(s => { document.getElementById(s.id).classList.remove('active'); document.getElementById(s.id).classList.add('done'); });
+        document.getElementById('step-label').textContent = 'Complete!';
+        document.getElementById('step-desc').textContent = 'Your music video is ready';
+        setTimeout(() => {
+          document.getElementById('result-section').classList.add('show');
+          document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          document.getElementById('gen-btn').disabled = false;
+        }, 600);
+      }
+    }, 160);
+  }
+</script>
